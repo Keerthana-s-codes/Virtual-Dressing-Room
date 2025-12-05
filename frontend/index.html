@@ -6,212 +6,173 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <style>
     :root{
-      --primary:#ff9900; --dark:#0f1724; --muted:#6b7280; --card:#fff; --bg:#f3f4f6; --accent:#4f46e5; --shadow:0 6px 20px rgba(15,23,36,0.06);
+      --primary:#ff7a00; --accent:#6b46ff; --bg:#f5f7fb; --card:#fff; --muted:#6b7280; --dark:#0b1220;
+      --shadow: 0 8px 28px rgba(15,23,36,0.06);
+      --glass: rgba(255,255,255,0.7);
     }
     *{box-sizing:border-box}
-    body{font-family:Inter,Segoe UI,Arial; margin:0; background:var(--bg); color:var(--dark); -webkit-font-smoothing:antialiased}
-    a{color:inherit; text-decoration:none;}
-    header.site-header{background:#fff;padding:12px 28px;border-bottom:1px solid rgba(0,0,0,0.04);position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:18px}
-    .logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:20px;color:var(--dark)}
-    .logo .badge{background:var(--primary);color:#fff;padding:6px 10px;border-radius:8px;font-weight:800}
-    .search{flex:1;display:flex;align-items:center;gap:8px;margin-left:10px;background:#fff;padding:8px;border-radius:8px;box-shadow:var(--shadow);border:1px solid rgba(0,0,0,0.04)}
-    .search input{flex:1;border:0;outline:none;font-size:15px}
-    .search button{background:var(--primary);color:#fff;border:0;padding:8px 12px;border-radius:6px;cursor:pointer}
-    .header-actions{display:flex;gap:10px;align-items:center;margin-left:8px}
-    .icon-btn{background:#fff;border:1px solid rgba(0,0,0,0.06);padding:8px 10px;border-radius:8px;cursor:pointer}
-    .mini-cart{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted);cursor:pointer}
-    .page{max-width:1200px;margin:18px auto;padding:0 18px}
-    .hero{background:linear-gradient(90deg, rgba(79,70,229,0.03), rgba(255,153,0,0.02));border-radius:12px;padding:18px;display:flex;gap:18px;align-items:center;overflow:hidden}
-    .hero .left{flex:1}
-    .hero h2{margin:0 0 8px 0;font-size:26px}
-    .hero p{margin:0;color:var(--muted)}
-    .hero .banner{width:360px;height:140px;border-radius:8px;object-fit:cover;border:1px solid rgba(0,0,0,0.03);background:#fff}
-    .grid{margin-top:18px;display:grid;gap:14px;grid-template-columns: repeat(auto-fill, minmax(220px,1fr))}
-    .product{background:var(--card);border-radius:10px;padding:10px;box-shadow:var(--shadow);position:relative;display:flex;flex-direction:column;justify-content:space-between}
-    .product .thumb{width:100%;height:240px;object-fit:cover;border-radius:8px;background:#fafafa}
-    .badge-top{position:absolute;left:10px;top:10px;background:var(--primary);color:#fff;padding:6px 8px;border-radius:6px;font-size:12px}
-    .product h4{margin:10px 0 6px;font-size:16px}
-    .price{font-weight:700;color:var(--dark)}
-    .meta{font-size:13px;color:var(--muted)}
-    .dot{display:inline-block;width:14px;height:14px;border-radius:50%;margin-right:6px;border:1px solid rgba(0,0,0,0.06)}
-    .actions{display:flex;gap:8px;margin-top:10px}
-    .btn{background:var(--accent);color:#fff;padding:8px 10px;border-radius:8px;border:0;cursor:pointer;font-weight:600}
-    .btn.secondary{background:#fff;color:var(--accent);border:1px solid rgba(79,70,229,0.12)}
-    .try-btn{background:var(--primary);color:#111;font-weight:700}
-    .sidebar{width:320px;margin-left:18px;position:sticky;top:84px;align-self:start}
-    .panel{background:var(--card);padding:14px;border-radius:10px;box-shadow:var(--shadow)}
-    .modal-backdrop{position:fixed;inset:0;background:rgba(5,10,20,0.5);display:flex;align-items:center;justify-content:center;z-index:80}
-    .modal{width:720px;max-width:95%;background:var(--card);padding:16px;border-radius:12px}
-    .modal img{max-width:260px;border-radius:8px;border:1px solid #eee}
-    .heart{cursor:pointer;font-size:18px;color:#bbb}
-    .heart.liked{color:#e11d48}
-    .cart-count{background:var(--primary);color:white;padding:2px 6px;border-radius:8px;font-size:12px;margin-left:6px}
-    .muted{color:var(--muted)}
-    @media (max-width:900px){.sidebar{display:none}.modal{width:95%}}
+    html,body{height:100%;margin:0;background:var(--bg);font-family:Inter,system-ui,Segoe UI,Arial;color:var(--dark)}
+    a{color:inherit;text-decoration:none}
+    header.site-header{background:#fff;padding:16px 40px;border-bottom:1px solid rgba(0,0,0,0.04);display:flex;align-items:center;gap:18px;position:sticky;top:0;z-index:40}
+    .logo{display:flex;align-items:center;gap:12px}
+    .badge{background:var(--primary);color:#fff;padding:8px 12px;border-radius:10px;font-weight:800}
+    .search{flex:1;display:flex;align-items:center;gap:8px;background:#fff;padding:8px;border-radius:10px;box-shadow:var(--shadow);border:1px solid rgba(0,0,0,0.03)}
+    .search input{flex:1;border:0;outline:none;padding:8px;font-size:15px}
+    .header-actions{display:flex;gap:10px;align-items:center}
+    .icon-btn{background:#fff;border:0;padding:10px 12px;border-radius:10px;cursor:pointer;box-shadow:var(--shadow)}
+    main.container{max-width:1400px;margin:24px auto;padding:0 18px;width:calc(100% - 36px)}
+    .hero{background:linear-gradient(90deg, rgba(107,70,255,0.06), rgba(255,122,0,0.03)); border-radius:12px;padding:28px;display:flex;gap:18px;align-items:center}
+    .hero-left{flex:1}
+    .hero h1{margin:0;font-size:36px}
+    .hero p{color:var(--muted);margin:8px 0 0}
+    .panel-row{display:flex;gap:18px;margin-top:18px}
+    .panel{background:var(--card);padding:16px;border-radius:12px;box-shadow:var(--shadow);flex:1}
+    .catalog{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:20px;margin-top:20px}
+    .product{background:var(--card);padding:12px;border-radius:12px;box-shadow:var(--shadow);display:flex;flex-direction:column}
+    .thumb{width:100%;height:260px;object-fit:cover;border-radius:10px;background:#fafafa}
+    .meta{color:var(--muted);font-size:13px}
+    .product .actions{display:flex;gap:10px;margin-top:12px}
+    .btn{background:var(--accent);color:#fff;padding:10px 12px;border-radius:10px;border:0;cursor:pointer;font-weight:700}
+    .btn.secondary{background:#fff;color:var(--accent);border:1px solid rgba(0,0,0,0.06)}
+    .rating{display:flex;align-items:center;gap:8px;color:var(--primary);font-weight:700}
+    /* Try modal */
+    .modal-backdrop{position:fixed;inset:0;background:rgba(5,10,20,0.45);display:none;align-items:center;justify-content:center;z-index:90}
+    .modal{width:94%;max-width:1100px;background:var(--card);padding:18px;border-radius:12px;display:flex;gap:18px;box-shadow:var(--shadow)}
+    .try-left{flex:1}
+    .try-right{width:420px;display:flex;flex-direction:column;gap:12px}
+    input[type=file]{padding:8px;border-radius:8px;border:1px solid #eee}
+    .small-muted{color:var(--muted);font-size:13px}
+    /* recommendation list */
+    .recs{display:flex;flex-direction:column;gap:10px}
+    .rec-item{display:flex;gap:10px;align-items:center;padding:8px;border-radius:8px;background:linear-gradient(180deg,#fff,#fbfbfd);border:1px solid rgba(0,0,0,0.03)}
+    .rec-thumb{width:60px;height:60px;border-radius:8px;background:#eee;object-fit:cover}
+    /* preview panel */
+    .preview-box{background:#fbfcff;border-radius:10px;padding:12px;text-align:center;display:flex;align-items:center;justify-content:center;min-height:360px}
+    .preview-box img{max-width:100%;max-height:360px;border-radius:8px;object-fit:contain}
+    /* Skin & season visual */
+    .swatch{width:64px;height:64px;border-radius:10px;border:1px solid rgba(0,0,0,0.06);box-shadow:0 6px 18px rgba(10,10,20,0.04)}
+    .swatch-label{font-size:13px;color:var(--muted);margin-top:6px;text-align:center}
+    .skin-result{display:flex;gap:12px;align-items:center}
+    .skin-info{display:flex;flex-direction:column;gap:8px}
+    /* Personal color card */
+    .tone-card{background:linear-gradient(180deg,#fff,#fbfbff);padding:14px;border-radius:12px;border:1px solid rgba(0,0,0,0.04);display:flex;flex-direction:column;align-items:center;min-width:120px}
+    .tone-name{font-weight:800;color:var(--accent);font-size:18px}
+    .tone-rgb{font-size:12px;color:var(--muted);margin-top:6px}
+    /* responsive */
+    @media (max-width:900px){
+      .panel-row{flex-direction:column}
+      .modal{flex-direction:column}
+      .try-right{width:100%}
+      .preview-box{min-height:240px}
+    }
   </style>
 </head>
 <body>
   <header class="site-header">
-    <div class="logo"><span class="badge">Try Vibe</span><span style="font-size:13px;color:var(--muted)">Virtual Dressing & Shopping</span></div>
-
-    <div class="search" role="search" aria-label="Search products">
-      <input id="q" type="search" placeholder="Search for products, e.g. jackets, saree, sneakers..." />
-      <button onclick="doSearch()">Search</button>
+    <div class="logo"><div class="badge">Try Vibe</div><div style="font-size:13px;color:var(--muted)">Virtual Dressing & Shopping</div></div>
+    <div class="search" role="search">
+      <input id="q" type="search" placeholder="Search products, e.g. jackets, saree, sneakers..." />
+      <button onclick="doSearch()" style="background:var(--primary);border-radius:8px;padding:8px 12px;border:0;color:white;cursor:pointer">Search</button>
     </div>
-
     <div class="header-actions">
-      <div class="mini-cart" title="Cart" onclick="openCart()">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4" stroke="#111" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        <span id="cartLabel">Cart</span>
-        <span id="cartCount" class="cart-count" style="display:none">0</span>
-      </div>
-      <button class="icon-btn" onclick="openSkinModal()">Skin Tone</button>
-      <button class="icon-btn" id="signBtn" onclick="openSignModal()">Sign in</button>
+      <button class="icon-btn" onclick="openSignModal()" id="signBtn">Sign in</button>
     </div>
   </header>
 
-  <main class="page">
+  <main class="container">
     <section class="hero">
-      <div class="left">
-        <h2>REFLECT YOUR PERSONAL STYLE</h2>
-        <p>See how clothes look on you before you buy. Click Try On on any product to upload your full-body photo and preview the clothing.</p>
-        <div style="margin-top:12px">
-          <input id="city" placeholder="Enter city for seasonal suggestions (optional)" class="input" style="padding:8px;border-radius:6px;border:1px solid #ddd"/>
-          <button class="btn" onclick="loadSeason()">Seasonal Picks</button>
-        </div>
+      <div class="hero-left">
+        <h1>REFLECT YOUR PERSONAL STYLE</h1>
+        <p>Try clothes on your photo instantly. Click Try On and upload a full-body photo — our backend will use OOT-diffusion or a local fallback to return a fitted result.</p>
       </div>
-
-      <!-- local banner: make sure Poster.png is in frontend/ -->
-      <img class="banner" id="heroBanner" src="./Poster.png" alt="Try Vibe Banner" onerror="this.style.opacity=0.6"/>
+      <div class="hero-right">
+        <img src="./Poster.png" alt="banner" style="width:320px;height:140px;object-fit:cover;border-radius:10px;border:1px solid #eee" onerror="this.style.display='none'"/>
+      </div>
     </section>
 
-    <div style="display:flex; gap:18px; margin-top:18px;">
-      <div style="flex:1">
-        <div id="catalogGrid" class="grid"></div>
+    <!-- Skin + Seasonal row (side-by-side) -->
+    <div class="panel-row" style="margin-top:20px">
+      <div class="panel">
+        <!-- Changed title here to Personal Color -->
+        <h3 style="margin-top:0">Personal Color</h3>
+        <p class="small-muted">Upload a face photo to get your personal tone and a helpful color palette.</p>
+        <div style="display:flex;gap:12px;align-items:center;margin-top:12px">
+          <input id="skinFile" type="file" accept="image/*"/>
+          <button class="btn" onclick="doSkin()">Analyze</button>
+          <div id="skinResultBox" style="flex:1"></div>
+        </div>
       </div>
 
-      <aside class="sidebar">
-        <div class="panel">
-          <h3 style="margin:0">How Try Vibe works</h3>
-          <p class="meta">1) Select a product → Click Try On → Upload a full-body photo. 2) Use Scale & Y-offset sliders to adjust overlay. 3) View recommendations and skin-tone friendly colors.</p>
-          <div style="height:12px"></div>
-          <button class="btn" onclick="openSkinModal()">Open Skin Tone Analyzer</button>
+      <div class="panel">
+        <h3 style="margin-top:0">Seasonal Picks</h3>
+        <p class="small-muted">Enter a city (optional) for local seasonal outfit suggestions, or let us guess from the month.</p>
+        <div style="display:flex;gap:12px;align-items:center;margin-top:12px">
+          <input id="city" placeholder="City (optional)" style="padding:8px;border-radius:8px;border:1px solid #eee;flex:1"/>
+          <button class="btn" onclick="loadSeason()">Show Picks</button>
         </div>
-        <div style="height:12px"></div>
-        <div class="panel">
-          <h4 style="margin:0">Try On Tips</h4>
-          <ul class="meta">
-            <li>Use full-body photo (shoulders & hips visible)</li>
-            <li>Good lighting gives better results</li>
-            <li>Use the sliders for fine alignment</li>
-          </ul>
-        </div>
-      </aside>
+      </div>
     </div>
+
+    <!-- Catalog grid -->
+    <div id="catalogGrid" class="catalog"></div>
+
   </main>
 
-  <!-- Try On Modal -->
-  <div id="tryModal" style="display:none" class="modal-backdrop">
+  <!-- Try On Modal (recommendations left, preview right) -->
+  <div id="tryModal" class="modal-backdrop">
     <div class="modal">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <h3>Try On — <span id="modalItemName"></span></h3>
-        <button onclick="closeTryModal()" style="background:transparent;border:0;font-size:18px">✕</button>
-      </div>
-      <div style="display:flex; gap:12px; margin-top:8px;">
-        <div style="flex:1">
-          <label class="muted">Choose full-body image</label>
-          <input id="fullFile" type="file" accept="image/*" /><br/>
-          <label style="display:block;margin-top:8px" class="muted">Scale</label>
-          <input id="scale" type="range" min="0.5" max="2" step="0.05" value="1" />
-          <label style="display:block;margin-top:6px" class="muted">Vertical offset (Y)</label>
-          <input id="yoff" type="range" min="-300" max="300" step="1" value="0" />
+      <div class="try-left">
+        <h3 id="modalItemName">Try On</h3>
+        <label class="small-muted">Choose full-body image (JPEG/PNG)</label><br/>
+        <input id="fullFile" type="file" accept="image/*" /><br/><br/>
+        <div style="display:flex;gap:10px">
+          <button class="btn" onclick="uploadTryOn()">Try Now</button>
+          <!-- Try button inside modal that redirects to Hugging Face Kolors page -->
+          <button class="btn secondary" onclick="goToKolors()">Try</button>
+          <button class="btn secondary" onclick="closeTryModal()">Cancel</button>
+        </div>
 
-          <div style="margin-top:12px">
-            <button class="btn try-btn" onclick="uploadTryOn()">Upload & Try On</button>
+        <!-- recommendations: left column -->
+        <div id="recInModal" style="margin-top:16px">
+          <h4 style="margin:8px 0">Recommendations</h4>
+          <div class="recs" id="recList">
+            <!-- filled dynamically -->
           </div>
         </div>
-        <div style="width:280px">
-          <img id="preview" src="" alt="preview" style="width:100%; border-radius:8px;"/>
-          <div id="recInModal" style="margin-top:8px"></div>
+      </div>
+
+      <div class="try-right">
+        <div class="preview-box">
+          <!-- sample preview image (local path present in your environment) -->
+          <img id="preview" src="/mnt/data/67fb3582-fe2b-4035-a174-05af3838d4cf.png" alt="preview" />
+        </div>
+        <div style="display:flex;gap:12px;align-items:center;justify-content:space-between">
+          <div class="small-muted">Result preview</div>
+          <div style="font-size:13px;color:var(--muted)">Tip: upload a full-body photo for best results.</div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Skin modal -->
-  <div id="skinModal" style="display:none" class="modal-backdrop">
-    <div class="modal">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <h3>Skin Tone Analyzer</h3>
-        <button onclick="closeSkinModal()" style="background:transparent;border:0;font-size:18px">✕</button>
-      </div>
-      <div style="margin-top:8px; display:flex; gap:12px;">
-        <div style="flex:1">
-          <input id="skinFile" type="file" accept="image/*" /><br/>
-          <button class="btn" style="margin-top:10px" onclick="doSkin()">Analyze</button>
-        </div>
-        <div style="width:260px" id="skinResultBox"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Cart modal -->
-  <div id="cartModal" style="display:none" class="modal-backdrop">
-    <div class="modal">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <h3>Cart</h3>
-        <button onclick="closeCart()" style="background:transparent;border:0;font-size:18px">✕</button>
-      </div>
-      <div id="cartBody" style="margin-top:12px"></div>
-    </div>
-  </div>
-
-  <!-- Sign up / Sign in modal -->
-  <div id="signModal" style="display:none" class="modal-backdrop">
-    <div class="modal" style="max-width:520px">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <h3 id="signTitle">Sign in to Try Vibe</h3>
-        <button onclick="closeSignModal()" style="background:transparent;border:0;font-size:18px">✕</button>
-      </div>
-
-      <div style="margin-top:10px; display:flex; gap:12px; flex-direction:column">
-        <div id="authTabs" style="display:flex; gap:6px">
-          <button class="btn" id="tabSignIn" onclick="showTab('signin')">Sign in</button>
-          <button class="btn secondary" id="tabSignUp" onclick="showTab('signup')">Create account</button>
-        </div>
-
-        <div id="signinForm" style="display:block">
-          <input id="signinEmail" placeholder="Email" style="padding:10px;border-radius:6px;border:1px solid #ddd;width:100%"/>
-          <input id="signinPassword" placeholder="Password" type="password" style="padding:10px;border-radius:6px;border:1px solid #ddd;width:100%;margin-top:8px"/>
-          <div style="margin-top:10px;display:flex;gap:8px">
-            <button class="btn" onclick="doSignIn()">Sign in</button>
-            <button class="btn secondary" onclick="showTab('signup')">Create account</button>
-          </div>
-        </div>
-
-        <div id="signupForm" style="display:none">
-          <input id="suName" placeholder="Full name" style="padding:10px;border-radius:6px;border:1px solid #ddd;width:100%"/>
-          <input id="suEmail" placeholder="Email" style="padding:10px;border-radius:6px;border:1px solid #ddd;width:100%;margin-top:8px"/>
-          <input id="suPassword" placeholder="Password" type="password" style="padding:10px;border-radius:6px;border:1px solid #ddd;width:100%;margin-top:8px"/>
-          <div style="margin-top:10px">
-            <button class="btn" onclick="doSignUp()">Create account</button>
-          </div>
-        </div>
-
-        <small class="muted" style="margin-top:8px">Demo sign up — uses localStorage (not a real auth). For production we can hook a backend/auth provider.</small>
+  <!-- Sign modal (simple) -->
+  <div id="signModal" class="modal-backdrop" style="display:none">
+    <div class="modal" style="max-width:480px;flex-direction:column">
+      <h3 style="margin:0 0 10px 0">Sign in / Create account</h3>
+      <input id="signinEmail" placeholder="Email" style="padding:10px;border-radius:8px;border:1px solid #eee;margin-bottom:8px"/>
+      <input id="signinPassword" placeholder="Password" type="password" style="padding:10px;border-radius:8px;border:1px solid #eee;margin-bottom:12px"/>
+      <div style="display:flex;gap:8px">
+        <button class="btn" onclick="doSignIn()">Sign in</button>
+        <button class="btn secondary" onclick="doSignUp()">Create account</button>
+        <button class="btn secondary" onclick="closeSignModal()">Close</button>
       </div>
     </div>
   </div>
 
 <script>
-/* ----------------- Config ----------------- */
+/* Config */
 const API = "http://127.0.0.1:8000";
-/* ----------------- Local storage keys ----------------- */
-const CART_KEY = "tryv_cart_v1";
-const LIKES_KEY = "tryv_likes_v1";
-const USER_KEY = "tryv_user_v1";
 
-/* ----------------- Catalog load & render ----------------- */
+/* Catalog load & render */
 let catalog = [];
 async function loadCatalog(){
   try{
@@ -220,196 +181,111 @@ async function loadCatalog(){
     const j = await res.json();
     catalog = j.items || [];
     renderCatalog(catalog);
-    if(catalog[0]){
-      const hb = document.getElementById("heroBanner");
-      if(!hb.src || hb.src.endsWith("Poster.png")) hb.src = "./Poster.png";
-    }
-    updateCartCount();
-    updateSignButton();
   }catch(e){
     console.error("catalog failed", e);
-    document.getElementById("catalogGrid").innerHTML =
-      "<div style='grid-column:1/-1;padding:18px;color:#b00'>Failed to load catalog — is the backend running?</div>";
+    document.getElementById("catalogGrid").innerHTML = "<div style='grid-column:1/-1;padding:18px;color:#b00'>Failed to load catalog — backend running?</div>";
   }
 }
 
 function renderCatalog(items){
   const grid = document.getElementById("catalogGrid");
   grid.innerHTML = "";
-  const likes = JSON.parse(localStorage.getItem(LIKES_KEY) || "{}");
   items.forEach(it=>{
-    const likedClass = likes[it.id] ? "liked" : "";
-    const div = document.createElement("div");
-    div.className = "product";
-    div.innerHTML = `
-      ${(it.type === 'top' || it.type==='dress') ? '<div class="badge-top">Try On</div>' : ''}
-      <img class="thumb" src="${API + it.thumb}" alt="${it.name}" onerror="this.style.opacity=0.5"/>
-      <h4>${it.name}</h4>
+    const el = document.createElement("div");
+    el.className = "product";
+    const rating = (it.rating || 4.5).toFixed(1);
+    const reviews = it.reviews || Math.floor(50 + Math.random()*400);
+    el.innerHTML = `
+      <img class="thumb" src="${API + it.thumb}" alt="${it.name}" onerror="this.style.opacity=0.6"/>
+      <h4 style="margin:10px 0 4px 0">${it.name}</h4>
       <div class="meta">${it.type || ''} • ${it.color || ''}</div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px">
-        <div><div class="price">₹${Math.floor(499 + Math.random()*3000)}</div><div class="meta" style="font-size:12px">Free delivery</div></div>
-        <div>
-          <button class="btn secondary" onclick="addToCart('${it.id}')">Add to cart</button>
-          <button class="btn" style="margin-left:8px" onclick="openTryModal('${it.id}')">Try On</button>
-        </div>
-      </div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px">
-        <div>
-          <span class="heart ${likedClass}" onclick="toggleLike('${it.id}', this)">❤</span>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px">
+        <div class="rating">★ ${rating} <span style="color:var(--muted);font-weight:400;margin-left:6px">(${reviews} reviews)</span></div>
+        <div style="text-align:right">
+          <div style="font-weight:800">₹${it.price || (499 + Math.floor(Math.random()*3000))}</div>
+          <div style="margin-top:8px" class="actions">
+            <button class="btn secondary" onclick="viewOutfit('${it.id}')">View Outfit</button>
+            <button class="btn" onclick="openTryModal('${it.id}')">Try On</button>
+          </div>
         </div>
       </div>
     `;
-    grid.appendChild(div);
+    grid.appendChild(el);
   });
 }
 
-/* ----------------- Cart (local) ----------------- */
-function getCart(){ return JSON.parse(localStorage.getItem(CART_KEY) || "[]"); }
-function saveCart(c){ localStorage.setItem(CART_KEY, JSON.stringify(c)); updateCartCount(); }
-function addToCart(id){
-  const item = catalog.find(x=>x.id===id);
-  if(!item) return alert("Item not found");
-  const c = getCart();
-  c.push({id:item.id, name:item.name, thumb:item.thumb, price: Math.floor(499 + Math.random()*3000)});
-  saveCart(c);
-  alert(item.name + " added to cart");
-}
-function updateCartCount(){
-  const c = getCart();
-  const el = document.getElementById("cartCount");
-  if(c.length>0){ el.style.display = "inline-block"; el.innerText = c.length; } else el.style.display="none";
-}
-function openCart(){
-  const c = getCart();
-  const body = document.getElementById("cartBody");
-  if(c.length===0){
-    body.innerHTML = "<div>Your cart is empty</div>";
-  }else{
-    body.innerHTML = c.map((it,idx)=>`
-      <div style="display:flex;align-items:center;margin-bottom:8px">
-        <img src="${API+it.thumb}" width="64" style="border-radius:6px;margin-right:8px"/>
-        <div style="flex:1">
-          <div style="font-weight:700">${it.name}</div>
-          <div style="color:#666">₹${it.price}</div>
-          <div style="margin-top:6px"><button onclick="removeFromCart(${idx})" class="btn secondary">Remove</button></div>
-        </div>
-      </div>
-    `).join("") + `<div style="margin-top:10px"><button class="btn" onclick="checkout()">Checkout</button></div>`;
-  }
-  document.getElementById("cartModal").style.display = "flex";
-}
-function closeCart(){ document.getElementById("cartModal").style.display = "none"; }
-function removeFromCart(idx){ const c = getCart(); c.splice(idx,1); saveCart(c); openCart(); }
-function checkout(){ alert("Demo checkout — not connected to payment. Cart cleared."); localStorage.removeItem(CART_KEY); updateCartCount(); closeCart(); }
-
-/* ----------------- Likes ----------------- */
-function toggleLike(id, el){
-  const likes = JSON.parse(localStorage.getItem(LIKES_KEY) || "{}");
-  if(likes[id]){ delete likes[id]; el.classList.remove("liked"); } else { likes[id] = true; el.classList.add("liked"); }
-  localStorage.setItem(LIKES_KEY, JSON.stringify(likes));
-}
-
-/* ----------------- Sign in / Sign up (demo) ----------------- */
-function openSignModal(){ document.getElementById("signModal").style.display = "flex"; showTab('signin'); }
-function closeSignModal(){ document.getElementById("signModal").style.display = "none"; }
-function showTab(t){
-  document.getElementById('signinForm').style.display = (t === 'signin') ? 'block' : 'none';
-  document.getElementById('signupForm').style.display = (t === 'signup') ? 'block' : 'none';
-}
-function doSignUp(){
-  const name = document.getElementById('suName').value.trim();
-  const email = document.getElementById('suEmail').value.trim();
-  const pw = document.getElementById('suPassword').value;
-  if(!name || !email || pw.length < 4) return alert('Please fill name, email and a password (min 4 chars).');
-  const user = {name, email};
-  localStorage.setItem(USER_KEY, JSON.stringify(user));
-  updateSignButton();
-  closeSignModal();
-  alert('Account created. Signed in as ' + name);
-}
-function doSignIn(){
-  const email = document.getElementById('signinEmail').value.trim();
-  const pw = document.getElementById('signinPassword').value;
-  if(!email || !pw) return alert('Enter email and password.');
-  let user = JSON.parse(localStorage.getItem(USER_KEY) || 'null');
-  if(!user){
-    user = {name: email.split('@')[0], email};
-    localStorage.setItem(USER_KEY, JSON.stringify(user));
-  }
-  updateSignButton();
-  closeSignModal();
-  alert('Signed in as ' + user.name);
-}
-function updateSignButton(){
-  const u = JSON.parse(localStorage.getItem(USER_KEY) || 'null');
-  const btn = document.getElementById("signBtn");
-  if(u){ btn.innerText = u.name; } else btn.innerText = "Sign in";
-}
-
-/* ----------------- Try On (backend) ----------------- */
+/* Try On modal */
 let currentItem = null;
-let lastResultUrl = "";
 function openTryModal(id){
   currentItem = catalog.find(x => x.id === id);
-  document.getElementById("modalItemName").innerText = currentItem ? currentItem.name : "Product";
-  document.getElementById("preview").src = "";
+  document.getElementById("modalItemName").innerText = currentItem ? currentItem.name : "Try On";
+  document.getElementById("preview").src = "./Preview.jpg";
   document.getElementById("fullFile").value = "";
-  document.getElementById("scale").value = 1;
-  document.getElementById("yoff").value = 0;
   document.getElementById("tryModal").style.display = "flex";
+  // populate rec list with item.recommend (if available)
+  const recContainer = document.getElementById("recList");
+  recContainer.innerHTML = "";
+  const recs = (currentItem && currentItem.recommend) ? currentItem.recommend : (currentItem ? currentItem.recommendations : []);
+  if(Array.isArray(recs) && recs.length){
+    recs.forEach(rid=>{
+      const recItem = catalog.find(x=>x.id===rid) || {thumb:'/mnt/data/67fb3582-fe2b-4035-a174-05af3838d4cf.png', name:rid};
+      const div = document.createElement('div');
+      div.className = 'rec-item';
+      div.innerHTML = `<img class="rec-thumb" src="${API + (recItem.thumb||recItem.thumb)}" onerror="this.style.opacity=0.6"/><div>${recItem.name||rid}</div>`;
+      recContainer.appendChild(div);
+    });
+  } else {
+    for(let i=0;i<3;i++){
+      const div = document.createElement('div');
+      div.className = 'rec-item';
+      div.innerHTML = `<img class="rec-thumb" src="/mnt/data/67fb3582-fe2b-4035-a174-05af3838d4cf.png" /><div>Accessory ${i+1}</div>`;
+      recContainer.appendChild(div);
+    }
+  }
 }
 function closeTryModal(){ document.getElementById("tryModal").style.display = "none"; }
+
+/* Redirect to the Hugging Face Kolors Virtual Try-On page */
+function goToKolors(){
+  window.location.href = "https://huggingface.co/spaces/Kwai-Kolors/Kolors-Virtual-Try-On";
+}
 
 async function uploadTryOn(){
   const fileEl = document.getElementById("fullFile");
   const f = fileEl.files[0];
-  if(!f){ alert("Please choose a full-body image first."); return; }
-  const scale = document.getElementById("scale").value;
-  const yoff = document.getElementById("yoff").value;
+  if(!f){ alert("Please choose a full-body image"); return; }
   const form = new FormData();
   form.append("image", f);
   form.append("item_id", currentItem.id);
-  form.append("scale", scale);
-  form.append("y_offset", yoff);
   try{
     const resp = await fetch(API + "/try_on", { method: "POST", body: form });
     const j = await resp.json();
     if(j.error){ alert("Try on failed: " + j.error); return; }
     const url = API + j.result_image;
-    lastResultUrl = url;
     document.getElementById("preview").src = url;
-    const rec = document.getElementById("recInModal");
-    rec.innerHTML = "<h4 style='margin:6px 0 2px 0'>Recommendations</h4>" +
-      ((j.recommendations || []).map(r =>
-        `<div style="display:flex;align-items:center;margin-top:6px">
-           <img src="${API + r.thumb}" width="56" style="border-radius:6px;margin-right:8px">${r.name}
-         </div>`
-      ).join(''));
+    // update recommendations on left (compact)
+    const rec = document.getElementById("recList");
+    rec.innerHTML = "";
+    (j.recommendations || []).forEach(r=>{
+      const div = document.createElement('div');
+      div.className = 'rec-item';
+      div.innerHTML = `<img class="rec-thumb" src="${API + (r.thumb||'')}" onerror="this.style.opacity=0.6"/><div>${r.name||r.id}</div>`;
+      rec.appendChild(div);
+    });
   }catch(e){
     console.error(e);
     alert("Server or network error. Is backend running?");
   }
 }
 
-/* ----------------- Skin Tone Analyzer ----------------- */
-function hexToRgb(hex){
-  const m = hex.replace('#','');
-  return [parseInt(m.substring(0,2),16), parseInt(m.substring(2,4),16), parseInt(m.substring(4,6),16)];
-}
-const NAMED = {
-  "#001f3f":"Navy","#808000":"Olive","#ffd1dc":"Pastel Pink","#800020":"Burgundy",
-  "#008080":"Teal","#8b0000":"Maroon","#ffdb58":"Mustard","#8b5e3c":"Earth",
-  "#4169e1":"Royal Blue","#ffd700":"Gold","#ff0000":"Red","#fffff0":"Ivory"
-};
-function nearestName(hex){
-  if(NAMED[hex]) return NAMED[hex];
-  const [r,g,b] = hexToRgb(hex);
-  const lum = 0.2126*r + 0.7152*g + 0.0722*b;
-  if(lum > 200) return "Light";
-  if(lum > 100) return "Medium";
-  return "Deep";
+/* View outfit (open outfit image in new tab) */
+function viewOutfit(id){
+  const it = catalog.find(x=>x.id===id);
+  if(!it || !it.outfit_png) return alert("Outfit image not available");
+  window.open(API + it.outfit_png, "_blank");
 }
 
+/* Personal Color (was "Skin analyzer") */
 async function doSkin(){
   const f = document.getElementById("skinFile").files[0];
   if(!f){ alert("Choose a face photo"); return; }
@@ -417,18 +293,28 @@ async function doSkin(){
   try{
     const resp = await fetch(API + "/skin_tone", { method: "POST", body: form });
     const j = await resp.json();
-    if(j.error){ alert("Skin analysis failed: " + j.error); return; }
+    if(j.error){ alert("Analysis failed: " + j.error); return; }
     const pal = j.palette || [];
     const box = document.getElementById("skinResultBox");
+    const toneName = j.label ? j.label.toUpperCase() : "UNKNOWN";
+    const rgb = j.skin_rgb ? j.skin_rgb.join(", ") : "";
+    // Build a cleaner, attractive Personal Color card - no wheel, no season text
     box.innerHTML = `
-      <div style="font-weight:700">Tone: ${j.label}</div>
-      <div style="margin-top:8px">RGB: <span style="font-weight:700">${j.skin_rgb.join(", ")}</span></div>
-      <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
-        ${pal.map(h => `<div style="width:90px;padding:8px;border-radius:8px;background:${h};color:rgba(0,0,0,0.6);text-align:center;border:1px solid rgba(0,0,0,0.06)">
-            <div style="height:36px;border-radius:6px;box-shadow:inset 0 -8px rgba(0,0,0,0.06)"></div>
-            <div style="font-size:12px;margin-top:6px">${nearestName(h)}</div>
-            <div style="font-size:11px;color:#fff">${h}</div>
-        </div>`).join('')}
+      <div style="display:flex;gap:12px;align-items:center">
+        <div class="tone-card">
+          <div style="font-size:12px;color:var(--muted)">Tone</div>
+          <div class="tone-name">${toneName}</div>
+          <div class="tone-rgb">${rgb}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;flex:1">
+          <div style="display:flex;gap:10px;align-items:center">
+            ${pal.slice(0,5).map(h=>`<div style="display:flex;flex-direction:column;align-items:center">
+              <div class="swatch" style="background:${h}"></div>
+              <div class="swatch-label">${h}</div>
+            </div>`).join('')}
+          </div>
+          <div style="margin-top:8px;color:var(--muted);font-size:13px">If the palette is limited, a general neutral palette is recommended.</div>
+        </div>
       </div>
     `;
   }catch(e){
@@ -437,7 +323,7 @@ async function doSkin(){
   }
 }
 
-/* ----------------- Seasonal picks ----------------- */
+/* Seasonal picks */
 async function loadSeason(){
   const city = document.getElementById("city").value.trim();
   const url = API + "/season_recommend" + (city? "?city=" + encodeURIComponent(city) : "");
@@ -452,27 +338,30 @@ async function loadSeason(){
     }
   }catch(e){
     console.error(e);
-    alert("Season fetch failed — is backend running?");
+    alert("Season fetch failed — backend?");
   }
 }
 
-/* ----------------- Search ----------------- */
+/* Search */
 function doSearch(){
   const q = document.getElementById("q").value.toLowerCase().trim();
   if(!q){ renderCatalog(catalog); return; }
-  const filtered = catalog.filter(it =>
-    (it.name + " " + (it.tags||[]).join(" ")).toLowerCase().includes(q)
-  );
+  const filtered = catalog.filter(it => (it.name + " " + (it.tags||[]).join(" ")).toLowerCase().includes(q));
   renderCatalog(filtered);
 }
 
-/* ----------------- Init ----------------- */
-function init(){
+/* Simple demo login/signup (localStorage) */
+function openSignModal(){ document.getElementById("signModal").style.display = "flex"; }
+function closeSignModal(){ document.getElementById("signModal").style.display = "none"; }
+function doSignUp(){ const e=document.getElementById("signinEmail").value; if(!e) return alert("enter email"); localStorage.setItem("tryv_user", e); updateSignButton(); closeSignModal(); alert("Account created"); }
+function doSignIn(){ const e=document.getElementById("signinEmail").value; if(!e) return alert("enter email"); localStorage.setItem("tryv_user", e); updateSignButton(); closeSignModal(); alert("Signed in"); }
+function updateSignButton(){ const u=localStorage.getItem("tryv_user"); document.getElementById("signBtn").innerText = u? ("Hi " + u.split('@')[0]) : "Sign in"; }
+
+/* Init */
+window.addEventListener('load', ()=>{
   loadCatalog();
-  updateCartCount();
   updateSignButton();
-}
-window.addEventListener('load', init);
+});
 </script>
 </body>
 </html>

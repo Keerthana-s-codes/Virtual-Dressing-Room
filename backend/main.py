@@ -1,11 +1,13 @@
-# backend/main.py  (local overlay only + better season mapping + robust Pillow usage)
+# backend/main.py
 import os
 import uuid
 import json
+import base64
 import math
+import time
 from typing import Optional
 
-from fastapi import FastAPI, File, UploadFile, Form
+from fastapi import FastAPI, File, UploadFile, Form, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 import requests
@@ -17,12 +19,10 @@ import mediapipe as mp
 
 # ---------- Pillow resampling compatibility ----------
 try:
-    # Pillow >= 9.1.0
     RESAMPLE_LANCZOS = Image.Resampling.LANCZOS
     RESAMPLE_BICUBIC = Image.Resampling.BICUBIC
     RESAMPLE_NEAREST = Image.Resampling.NEAREST
 except Exception:
-    # older Pillow
     try:
         RESAMPLE_LANCZOS = Image.LANCZOS
     except Exception:
@@ -44,8 +44,6 @@ OUTPUT_DIR = os.path.join(BASE_DIR, "outputs")
 DATA_DIR = os.path.join(BASE_DIR, "data")
 CATALOG_PATH = os.path.join(DATA_DIR, "catalog.json")
 
-WEATHER_API_KEY = os.environ.get("WEATHER_API_KEY", "")  # set in your environment
-
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # ---------- FastAPI app ----------
@@ -60,11 +58,9 @@ app.add_middleware(
 mp_pose = mp.solutions.pose
 mp_face = mp.solutions.face_detection
 
-
 def load_catalog():
     with open(CATALOG_PATH, "r", encoding="utf-8") as f:
         return json.load(f)
-
 
 # ---------- Utilities ----------
 def ensure_image(bytestr):
@@ -72,23 +68,16 @@ def ensure_image(bytestr):
     img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
     return img
 
-
-def rgb_to_hex(rgb):
-    return "#{:02x}{:02x}{:02x}".format(*rgb)
-
-
 def palette_for_label(label):
     mapping = {
-        "light": ["#001f3f", "#808000", "#ffd1dc", "#800020"],  # navy, olive, pastel pink, burgundy
-        "medium": ["#008080", "#8b0000", "#ffdb58", "#8b5e3c"],  # teal, maroon, mustard, earth
-        "deep": ["#4169e1", "#ffd700", "#ff0000", "#fffff0"],    # royal blue, gold, red, ivory
+        "light": ["#ffd1dc", "#fff2e6", "#fbe8c7", "#ffd3a5"],
+        "medium": ["#ffdb58", "#f4a261", "#c084fc", "#8b5e3c"],
+        "deep": ["#4169e1", "#ff0000", "#ffd700", "#2f855a"],
     }
     return mapping.get(label, mapping["medium"])
 
-
-# ---------- Skin tone detection ----------
+# Skin tone detection
 def extract_skin_rgb(bgr_image):
-    # Use face detection to get cheek-region; fall back to center crop
     with mp_face.FaceDetection(model_selection=0, min_detection_confidence=0.5) as detector:
         rgb = cv2.cvtColor(bgr_image, cv2.COLOR_BGR2RGB)
         results = detector.process(rgb)
@@ -101,7 +90,6 @@ def extract_skin_rgb(bgr_image):
             y = int(max(0, bbox.ymin * h))
             bw = int(min(w, bbox.width * w))
             bh = int(min(h, bbox.height * h))
-            # choose cheek region: slightly below top of bbox and to sides
             cx = x + bw // 2
             cy = y + int(bh * 0.45)
             r = max(10, int(min(bw, bh) * 0.15))
@@ -111,7 +99,6 @@ def extract_skin_rgb(bgr_image):
             y2 = min(h, cy + r)
             crop = bgr_image[y1:y2, x1:x2]
         else:
-            # fallback: central upper-body crop
             cy, cx = h // 3, w // 2
             r = min(w, h) // 8
             crop = bgr_image[max(0, cy - r):min(h, cy + r),
@@ -121,17 +108,11 @@ def extract_skin_rgb(bgr_image):
             return None
 
         pixels = crop.reshape(-1, 3)
-        # filter out extreme brightness/very dark pixels
         mask = (pixels.sum(axis=1) > 60) & (pixels.sum(axis=1) < 700)
-        if mask.sum() == 0:
-            use = pixels
-        else:
-            use = pixels[mask]
-
-        avg = np.median(use, axis=0).astype(int)  # BGR median
+        use = pixels[mask] if mask.sum() > 0 else pixels
+        avg = np.median(use, axis=0).astype(int)
         rgb = (int(avg[2]), int(avg[1]), int(avg[0]))
         return rgb
-
 
 def detect_skin_label(rgb):
     r, g, b = rgb
@@ -142,10 +123,8 @@ def detect_skin_label(rgb):
         return "medium"
     return "deep"
 
-
-# ---------- Pose + overlay ----------
+# Pose + overlay (local fallback)
 def is_full_body(pose_landmarks, img_shape):
-    # require shoulders and hips to be detected & reasonable vertical separation
     h, w = img_shape[:2]
     lm = pose_landmarks.landmark
     try:
@@ -164,21 +143,12 @@ def is_full_body(pose_landmarks, img_shape):
 
     shoulder_y = (L_sh.y + R_sh.y) / 2
     hip_y = (L_hip.y + R_hip.y) / 2
-    # require hips significantly below shoulders
-    return (hip_y - shoulder_y) * h > (h * 0.08)  # at least 8% of image height
+    return (hip_y - shoulder_y) * h > (h * 0.08)
 
-
-def overlay_outfit(user_bgr, outfit_path, scale_adj=1.0, y_offset=0):
-    """
-    Local overlay:
-      - uses shoulder width to compute outfit width
-      - rotates outfit to match shoulder angle
-      - uses torso length (shoulder->hip) to compute vertical placement.
-    """
+def overlay_outfit(user_bgr, outfit_path):
     with mp_pose.Pose(static_image_mode=True) as pose:
         rgb = cv2.cvtColor(user_bgr, cv2.COLOR_BGR2RGB)
         result = pose.process(rgb)
-
         if not result.pose_landmarks:
             return None, "no_person"
         if not is_full_body(result.pose_landmarks, user_bgr.shape):
@@ -186,7 +156,6 @@ def overlay_outfit(user_bgr, outfit_path, scale_adj=1.0, y_offset=0):
 
         h, w = user_bgr.shape[:2]
         lm = result.pose_landmarks.landmark
-
         LS = lm[mp_pose.PoseLandmark.LEFT_SHOULDER]
         RS = lm[mp_pose.PoseLandmark.RIGHT_SHOULDER]
         LH = lm[mp_pose.PoseLandmark.LEFT_HIP]
@@ -196,12 +165,10 @@ def overlay_outfit(user_bgr, outfit_path, scale_adj=1.0, y_offset=0):
         right_pt = (int(RS.x * w), int(RS.y * h))
         shoulder_w_px = max(10, abs(right_pt[0] - left_pt[0]))
 
-        # torso height = pixel distance between avg shoulders and avg hips
         shoulder_y_px = int(((LS.y + RS.y) / 2) * h)
         hip_y_px = int(((LH.y + RH.y) / 2) * h)
         torso_h = max(10, abs(hip_y_px - shoulder_y_px))
 
-        # compute rotation angle of shoulders (degrees)
         dx = right_pt[0] - left_pt[0]
         dy = right_pt[1] - left_pt[1]
         angle_deg = math.degrees(math.atan2(dy, dx))
@@ -211,39 +178,27 @@ def overlay_outfit(user_bgr, outfit_path, scale_adj=1.0, y_offset=0):
         except Exception:
             return None, "outfit_not_found"
 
-        # desired width based on shoulder width + scale
-        try:
-            desired_w = int(shoulder_w_px * 1.6 * float(scale_adj))
-        except Exception:
-            desired_w = outfit.width
-
+        desired_w = int(shoulder_w_px * 1.6)
         if desired_w <= 0:
             desired_w = outfit.width
-
         ratio = desired_w / float(outfit.width)
         new_h = max(1, int(outfit.height * ratio))
 
-        # resize
         try:
             outfit_resized = outfit.resize((desired_w, new_h), RESAMPLE_LANCZOS)
         except Exception:
             outfit_resized = outfit.resize((desired_w, new_h), RESAMPLE_BICUBIC)
 
-        # rotate using bicubic
         try:
-            outfit_rotated = outfit_resized.rotate(
-                angle_deg, expand=True, resample=RESAMPLE_BICUBIC
-            )
+            outfit_rotated = outfit_resized.rotate(angle_deg, expand=True, resample=RESAMPLE_BICUBIC)
         except Exception:
             outfit_rotated = outfit_resized.rotate(angle_deg, expand=True)
 
-        # placement
         anchor_x = int((left_pt[0] + right_pt[0]) / 2)
-        top_target_y = shoulder_y_px + int(torso_h * 0.03) + int(y_offset)
+        top_target_y = shoulder_y_px + int(torso_h * 0.03)
         paste_x = anchor_x - outfit_rotated.width // 2
         paste_y = top_target_y - int(outfit_rotated.height * 0.12)
 
-        # paste on person
         person = Image.fromarray(rgb).convert("RGBA")
         paste_x = max(-outfit_rotated.width, min(person.width, paste_x))
         paste_y = max(-outfit_rotated.height, min(person.height, paste_y))
@@ -259,26 +214,162 @@ def overlay_outfit(user_bgr, outfit_path, scale_adj=1.0, y_offset=0):
         out_bgr = cv2.cvtColor(np.array(person.convert("RGB")), cv2.COLOR_RGB2BGR)
         return out_bgr, None
 
+# ---------- OOT-diffusion Space helper (robust & debuggable) ----------
+def call_oot_space(person_bytes: bytes, outfit_bytes: bytes, timeout: int = 90):
+    """
+    Robust call to HuggingFace Space endpoint for OOTDiffusion.
+    Uses Authorization header if HF_SPACE_TOKEN or HF_TOKEN provided.
+    Tries JSON first, then multipart fallback. Raises RuntimeError with detailed info on failure.
+    """
+    space_endpoint = "https://levihsu-ootdiffusion.hf.space/run/predict"
+
+    
+
+
+    # ensure no trailing slash issues
+    
+
+    token = os.environ.get("HF_SPACE_TOKEN") or os.environ.get("HF_TOKEN") or os.environ.get("HF_API_TOKEN")
+    headers = {"Accept": "application/json"}
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+
+    # prepare JSON payload (data URLs)
+    p_b64 = base64.b64encode(person_bytes).decode("utf-8")
+    g_b64 = base64.b64encode(outfit_bytes).decode("utf-8")
+    payload = {"data": [f"data:image/png;base64,{p_b64}", f"data:image/png;base64,{g_b64}"]}
+
+    # Helper to summarize response for error messages (keep short)
+    def short(s, n=800):
+        try:
+            return s if len(s) <= n else s[:n] + "..."
+        except Exception:
+            return "<non-text-response>"
+
+    # 1) Try JSON POST
+    try:
+        r = requests.post(space_endpoint, json=payload, headers=headers, timeout=timeout)
+    except Exception as e:
+        # network error
+        raise RuntimeError(f"OOT space request failure (network exception): {e}")
+
+    # if not OK, attempt multipart fallback (and capture responses)
+    if r.status_code != 200:
+        resp_text = ""
+        try:
+            resp_text = r.text
+        except Exception:
+            resp_text = "<unreadable response body>"
+        # Attempt multipart fallback
+        try:
+            files = {
+                "person": ("person.png", person_bytes, "image/png"),
+                "garment": ("garment.png", outfit_bytes, "image/png"),
+            }
+            r2 = requests.post(space_endpoint, files=files, headers=headers, timeout=timeout)
+            if r2.status_code == 200:
+                r = r2
+            else:
+                # neither method worked: raise reason with status codes and snippets
+                snippet1 = short(resp_text)
+                try:
+                    snippet2 = short(r2.text)
+                except Exception:
+                    snippet2 = "<unreadable fallback response>"
+                raise RuntimeError(
+                    f"OOT endpoint returned {r.status_code} (json-post). resp_snippet={snippet1} ; "
+                    f"multipart returned {r2.status_code}. fallback_snippet={snippet2} ; "
+                    f"Ensure HF token is correct and Space is accessible."
+                )
+        except Exception as e2:
+            raise RuntimeError(f"OOT multipart fallback failed: {e2} ; initial_status={r.status_code} initial_snippet={short(resp_text)}")
+
+    # parse JSON
+    try:
+        resp_json = r.json()
+    except Exception as e:
+        # include text to aid debugging
+        body = ""
+        try:
+            body = r.text
+        except Exception:
+            body = "<non-text>"
+        raise RuntimeError(f"OOT returned non-json: {e} - response_text_snippet={short(body)}")
+
+    # find base64 image in the response object (search recursively)
+    def find_base64(obj):
+        if isinstance(obj, str) and obj.startswith("data:image"):
+            return obj.split(",", 1)[1]
+        if isinstance(obj, dict):
+            for v in obj.values():
+                res = find_base64(v)
+                if res:
+                    return res
+        if isinstance(obj, list):
+            for v in obj:
+                res = find_base64(v)
+                if res:
+                    return res
+        return None
+
+    image_b64 = find_base64(resp_json) or (isinstance(resp_json.get("data"), list) and find_base64(resp_json.get("data")))
+    recommendations = resp_json.get("recommendations") if isinstance(resp_json, dict) else []
+
+    if not image_b64:
+        # include helpful debugging pieces from response keys/text
+        try:
+            keys = ", ".join(map(str, resp_json.keys())) if isinstance(resp_json, dict) else str(type(resp_json))
+            sample = json.dumps(resp_json)[:1000]
+        except Exception:
+            keys = "<could-not-list-keys>"
+            sample = "<could-not-serialize-response>"
+        raise RuntimeError(f"OOT space did not return an image. response_keys={keys} response_sample={sample}. If this is a gated Space, ensure HF_SPACE_TOKEN has 'read' permission and can access the Space.")
+
+    return {"result_image_b64": image_b64, "recommendations": recommendations}
+
+# Optional quick startup probe to show accessible status (non-fatal)
+def check_space_endpoint():
+    endpoint = "https://hf.space/embed/levihsu/OOTDiffusion/+/api/predict"
+    token = os.environ.get("HF_SPACE_TOKEN") or os.environ.get("HF_TOKEN") or os.environ.get("HF_API_TOKEN")
+    headers = {}
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    try:
+        # Use HEAD or OPTIONS to check reachability quickly
+        r = requests.options(endpoint, headers=headers, timeout=8)
+        status = r.status_code
+        txt = (r.text[:400] + "...") if r.text else ""
+        print(f"[startup] OOTDiffusion space probe: status={status}, snippet={txt}")
+        if status in (401, 403):
+            print("[startup] WARNING: Space returned 401/403. Check HF_SPACE_TOKEN permissions (must have read access to gated models).")
+        if status == 404:
+            print("[startup] WARNING: Space returned 404. Ensure the space id 'levihsu/OOTDiffusion' exists and is public or accessible to your account.")
+    except Exception as e:
+        print(f"[startup] OOTDiffusion probe failed: {e} (this is non-fatal)")
+
+# Run probe at import/start (non-blocking-ish)
+try:
+    # small sleep to avoid noisy logs if requests not ready — but do it quickly
+    check_space_endpoint()
+except Exception:
+    pass
 
 # ---------- Endpoints ----------
 @app.get("/catalog")
 def catalog():
     return {"items": load_catalog()}
 
-
 @app.post("/try_on")
 async def try_on(
     image: UploadFile = File(...),
     item_id: str = Form(...),
-    scale: Optional[float] = Form(1.0),
-    y_offset: Optional[int] = Form(0),
 ):
     """
-    Local-only try-on:
-      1) Load user image
-      2) Find catalog item and its outfit_png
-      3) Run MediaPipe overlay
-      4) Return composed image + simple recommendations
+    Try-on flow:
+      1) load user image
+      2) find item and its outfit_png (local)
+      3) try OOT-diffusion Space (person + garment)
+      4) if fails -> local overlay fallback (kept as last resort)
     """
     contents = await image.read()
     user_img = ensure_image(contents)
@@ -298,13 +389,31 @@ async def try_on(
     if not os.path.exists(outfit_file):
         return JSONResponse({"error": "outfit_file_missing"}, status_code=500)
 
-    try:
-        out_img, err = overlay_outfit(
-            user_img, outfit_file, scale_adj=scale, y_offset=y_offset
-        )
-        if err:
-            return JSONResponse({"error": err}, status_code=400)
+    # read outfit bytes
+    with open(outfit_file, "rb") as f:
+        outfit_bytes = f.read()
 
+    remote_error = None
+
+    # 1) Try OOT-diffusion Space
+    try:
+        result = call_oot_space(contents, outfit_bytes, timeout=120)
+        output_bytes = base64.b64decode(result["result_image_b64"])
+        out_name = f"tryon_{item_id}_{uuid.uuid4().hex}.png"
+        out_path = os.path.join(OUTPUT_DIR, out_name)
+        with open(out_path, "wb") as f:
+            f.write(output_bytes)
+        return {"result_image": f"/outputs/{out_name}", "recommendations": result.get("recommendations", [])}
+    except Exception as e:
+        # save the remote error message for diagnostics (returned to frontend in fallback case)
+        remote_error = {"error": "oot_remote_failed", "message": str(e)}
+        print("OOT remote failed:", remote_error)
+
+    # 2) Local overlay fallback
+    try:
+        out_img, err = overlay_outfit(user_img, outfit_file)
+        if err:
+            return JSONResponse({"error": err, "remote_error": remote_error}, status_code=400)
         out_name = f"tryon_{item_id}_{uuid.uuid4().hex}.png"
         out_path = os.path.join(OUTPUT_DIR, out_name)
         cv2.imwrite(out_path, out_img)
@@ -313,16 +422,15 @@ async def try_on(
         for rid in item.get("recommend", []):
             rec = next((it for it in catalog_data if it["id"] == rid), None)
             if rec:
-                recommends.append(
-                    {"id": rec["id"], "name": rec["name"], "thumb": rec.get("thumb")}
-                )
+                recommends.append({"id": rec["id"], "name": rec["name"], "thumb": rec.get("thumb")})
 
-        return {"result_image": f"/outputs/{out_name}", "recommendations": recommends}
+        # include remote_error so frontend can display why remote failed
+        resp = {"result_image": f"/outputs/{out_name}", "recommendations": recommends}
+        if remote_error:
+            resp["remote_error"] = remote_error
+        return resp
     except Exception as e:
-        return JSONResponse(
-            {"error": f"fallback_overlay_failed: {e}"}, status_code=500
-        )
-
+        return JSONResponse({"error": f"fallback_overlay_failed: {e}", "remote_error": remote_error}, status_code=500)
 
 @app.post("/skin_tone")
 async def skin_tone(image: UploadFile = File(...)):
@@ -330,15 +438,12 @@ async def skin_tone(image: UploadFile = File(...)):
     img = ensure_image(contents)
     if img is None:
         return JSONResponse({"error": "could_not_read_image"}, status_code=400)
-
     rgb = extract_skin_rgb(img)
     if rgb is None:
         return JSONResponse({"error": "could_not_detect_face"}, status_code=400)
-
     label = detect_skin_label(rgb)
     palette = palette_for_label(label)
     return {"skin_rgb": rgb, "label": label, "palette": palette}
-
 
 @app.get("/outputs/{filename}")
 def serve_output(filename: str):
@@ -347,14 +452,12 @@ def serve_output(filename: str):
         return JSONResponse({"error": "file_not_found"}, status_code=404)
     return FileResponse(fp)
 
-
 @app.get("/outfits/{filename}")
 def serve_outfit(filename: str):
     fp = os.path.join(OUTFITS_DIR, filename)
     if not os.path.exists(fp):
         return JSONResponse({"error": "file_not_found"}, status_code=404)
     return FileResponse(fp)
-
 
 @app.get("/thumbs/{filename}")
 def serve_thumb(filename: str):
@@ -363,56 +466,44 @@ def serve_thumb(filename: str):
         return JSONResponse({"error": "file_not_found"}, status_code=404)
     return FileResponse(fp)
 
-
-# ---------- Season-based recommendations ----------
+# Season recommendations (India month-based mapping)
 @app.get("/season_recommend")
-def season_recommend(city: Optional[str] = None):
-    season = None
-
-    # 1) Try real weather if API key + city are available
-    if city and WEATHER_API_KEY:
-        try:
-            r = requests.get(
-                "https://api.openweathermap.org/data/2.5/weather",
-                params={"q": city, "appid": WEATHER_API_KEY, "units": "metric"},
-                timeout=6,
-            )
-            if r.status_code == 200:
-                data = r.json()
-                temp = data.get("main", {}).get("temp")
-                if temp is not None:
-                    # tuned thresholds (Celsius)
-                    if temp >= 30:
-                        season = "summer"
-                    elif temp >= 20:
-                        season = "spring"
-                    elif temp >= 12:
-                        season = "autumn"
-                    else:
-                        season = "winter"
-        except Exception as e:
-            print("Weather API failed:", e)
-            season = None
-
-    # 2) Fallback: infer season from month
-    if season is None:
-        import datetime
-
+def season_recommend(city: Optional[str] = None, month: Optional[int] = Query(None, ge=1, le=12)):
+    month_to_key = {
+        12: "winter", 1: "winter", 2: "winter",
+        3: "summer", 4: "summer", 5: "summer",
+        6: "monsoon", 7: "monsoon", 8: "monsoon", 9: "monsoon",
+        10: "post-monsoon", 11: "post-monsoon"
+    }
+    key_to_display = {
+        "winter": "Winter",
+        "summer": "Summer",
+        "monsoon": "Monsoon (Rainy Season)",
+        "post-monsoon": "Post-Monsoon / Autumn"
+    }
+    import datetime
+    if month is not None:
+        m = month
+    else:
         m = datetime.datetime.now().month
-        if m in (12, 1, 2):
-            season = "winter"
-        elif m in (3, 4, 5):
-            season = "spring"
-        elif m in (6, 7, 8):
-            season = "summer"
-        else:
-            season = "autumn"
-
+    season_key = month_to_key.get(m, "summer")
+    season_display = key_to_display.get(season_key, season_key.title())
     items = load_catalog()
-    filtered = [
-        it
-        for it in items
-        if season in [s.lower() for s in it.get("season", [])]
-        or "all" in [s.lower() for s in it.get("season", [])]
-    ]
-    return {"season": season, "items": filtered}
+    def normalize_season_tokens(it):
+        seasons = it.get("season", []) or []
+        out = []
+        for s in seasons:
+            if not isinstance(s, str): continue
+            t = s.strip().lower()
+            if t in ("autumn", "post-monsoon", "post monsoon"): out.append("post-monsoon")
+            elif t in ("rainy", "rainy season", "monsoon", "monsun"): out.append("monsoon")
+            elif t in ("winter",): out.append("winter")
+            elif t in ("summer",): out.append("summer")
+            elif t == "all": out.append("all")
+            else: out.append(t)
+        return set(out)
+    def item_matches(it, key):
+        tokens = normalize_season_tokens(it)
+        return ("all" in tokens) or (key in tokens)
+    filtered = [it for it in items if item_matches(it, season_key)]
+    return {"season": season_display, "season_key": season_key, "season_display": season_display, "items": filtered}
