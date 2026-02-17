@@ -34,27 +34,30 @@ placeholders = {
     "upper14.png": "Green Hoodie",
     "upper15.png": "Yellow Kurti",
     "upper16.png": "Grey Sweater",
+    "upper20.png": "Denim Jacket",
     # bottoms
-    "pant03.png": "Charcoal Trousers",
+    "pant02.png": "Blue Jeans",
+    "pant03.png": "Trousers",
     "pant04.png": "Black Skirt",
     "pant05.png": "Denim Shorts",
     # dresses / ethnic
-    "dress11.png": "Orange Maxi Dress",
+    "dress11.png": "Orange Dress",
     "saree01.png": "Blue Saree",
-    "kurti01.png": "Embroidered Kurti",
+    "kurti01.png": "Kurti",
     # shoes & accessories
+    "shoes01.png": "Brown Loafer",
+    "shoes02.png": "White Sneakers",
     "shoes03.png": "Black Boots",
     "shoes04.png": "Running Shoes",
     "bag01.png": "Leather Bag",
-    "sunglasses01.png": "Aviator Sunglasses",
-    "cap01.png": "Baseball Cap",
+    "sunglasses01.png": "Sunglasses",
+    "cap01.png": "Cap",
     # watches
+    "watch01.png": "Silver Watch",
+    "watch02.png": "Gold Watch",
     "watch03.png": "Sport Watch",
     # extra tops
-    "upper17.png": "Polka Dot Blouse",
-    "upper18.png": "Striped Shirt",
-    "upper19.png": "Linen Shirt",
-    "upper20.png": "Denim Jacket"
+    "upper17.png": "Pink Top"
 }
 
 def download_and_save(name, url):
@@ -68,7 +71,9 @@ def download_and_save(name, url):
         print("Saved", save_path)
         # create thumbnail
         thumb = img.copy()
-        thumb.thumbnail((300,300))
+        
+        thumb.thumbnail((300,300), Image.LANCZOS)
+
         thumb.save(os.path.join(THUMBS, name))
         print("Thumb saved", os.path.join(THUMBS, name))
     except Exception as e:
@@ -107,7 +112,9 @@ def make_placeholder(name, text, size=(800,1000), bg=None):
     thumbpath = os.path.join(THUMBS, name)
     img.save(fullpath)
     thumb = img.copy()
-    thumb.thumbnail((300,300))
+    
+    thumb.thumbnail((300,300), Image.LANCZOS)
+
     thumb.save(thumbpath)
     print("Created placeholder", name)
 
@@ -119,18 +126,5 @@ if __name__ == "__main__":
     # create placeholders for the added items
     for name, label in placeholders.items():
         make_placeholder(name, label)
-
-    # ensure some accessory placeholders (if not already)
-    accessory_placeholders = {
-        "pant01.png": "Black Chinos",
-        "pant02.png": "Blue Jeans",
-        "shoes01.png": "Brown Loafers",
-        "shoes02.png": "White Sneakers",
-        "watch01.png": "Silver Watch",
-        "watch02.png": "Gold Watch"
-    }
-    for name, text in accessory_placeholders.items():
-        if not os.path.exists(os.path.join(OUTFITS, name)):
-            make_placeholder(name, text)
 
     print("All done. Check 'outfits' and 'thumbs' folders.")

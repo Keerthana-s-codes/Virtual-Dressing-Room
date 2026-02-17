@@ -1,34 +1,69 @@
-# ────── Logs ──────
+# ────── Logs ───────────────────────────────
 logs/
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
-# ────── Build Output ──────
+# ────── Runtime Data ──────────────────────
+pids/
+*.pid
+*.pid.lock
+
+# ────── Temporary Files & Sockets ─────────
+tmp/
+
+# ────── Build Output ──────────────────────
 dist/
 build/
 
-# ────── Environment ──────
-.env
+# ────── TypeScript Cache ──────────────────
+*.tsbuildinfo
 
-# ────── Node Modules ──────
+# ────── Environment Variables ─────────────
+.env
+.env.local
+.env.*.local
+
+# ────── Database Files ────────────────────
+*.sqlite
+*.sqlite3
+db/*.sqlite
+db/*.sqlite3
+config/config.js
+
+# ────── Node Modules ──────────────────────
 node_modules/
 
-# ────── IDE Files ──────
+# ────── IDE Files ─────────────────────────
 .idea/
 .vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# ────── OS-specific Files ─────────────────
 .DS_Store
 Thumbs.db
 
-# ────── Python Virtual Environment ──────
+# ────── Testing Coverage ──────────────────
+coverage/
+*.lcov
+
+# ────── Miscellaneous ─────────────────────
+*.tgz
+*.lock-wscript
+/.yarn-integrity
+/.pnp.*
+
+# ────── Firebase Service Account ──────────
+config/firebase-service-account.json
+
+
 venv/
 backend/venv/
-
-# ────── Python Cache ──────
 __pycache__/
 *.pyc
 *.pyd
-*.pyo
-
-# ────── System Binaries ──────
-*.dll
-*.so
-*.dylib
+node_modules/
